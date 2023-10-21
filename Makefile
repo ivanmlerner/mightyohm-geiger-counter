@@ -23,7 +23,7 @@ PROGRAM		= geiger
 OBJECTS		= geiger.o
 DEVICE		= attiny2313
 CLOCK		= 8000000
-PROGRAMMER	= usbtiny
+PROGRAMMER	= usbasp
 PORT		= usb
 
 # Fuse configuration:
@@ -51,13 +51,13 @@ all:	$(PROGRAM).hex
 	$(SIZE) $(PROGRAM).elf
 
 $(PROGRAM):	all	
-	
+
 flash: all
 	$(AVRDUDE) -U flash:w:$(PROGRAM).hex:i
 
 fuse:
 	$(AVRDUDE) -U hfuse:w:$(HFUSE):m -U lfuse:w:$(LFUSE):m -U efuse:w:$(EFUSE):m
-	
+
 # Xcode uses the Makefile targets "", "clean" and "install"
 install: flash fuse
 
@@ -67,7 +67,7 @@ clean:
 # file targets:
 %.hex: %.elf
 	avr-objcopy -j .text -j .data -O ihex $< $@
-	
+
 %.elf: %.o
 	$(COMPILE) -o $@ $< $(LDFLAGS)
 
