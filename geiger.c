@@ -59,29 +59,29 @@
 */
 
 // Includes
-#include <avr/io.h>			// this contains the AVR IO port definitions
-#include <avr/interrupt.h>	// interrupt service routines
-#include <avr/pgmspace.h>	// tools used to store variables in program memory
-#include <avr/sleep.h>		// sleep mode utilities
-#include <util/delay.h>		// some convenient delay functions
-#include <stdlib.h>			// some handy functions like utoa()
+#include <avr/io.h>             // this contains the AVR IO port definitions
+#include <avr/interrupt.h>      // interrupt service routines
+#include <avr/pgmspace.h>       // tools used to store variables in program memory
+#include <avr/sleep.h>          // sleep mode utilities
+#include <util/delay.h>         // some convenient delay functions
+#include <stdlib.h>             // some handy functions like utoa()
 
 // Defines
 #define VERSION			"1.00"
-#define URL				"http://mightyohm.com/geiger"
+#define URL			"http://mightyohm.com/geiger"
 
 #define	F_CPU			8000000	// AVR clock speed in Hz
 #define	BAUD			9600	// Serial BAUD rate
-#define SER_BUFF_LEN	11		// Serial buffer length
+#define SER_BUFF_LEN	        11     	// Serial buffer length
 #define THRESHOLD		1000	// CPM threshold for fast avg mode
-#define LONG_PERIOD		60		// # of samples to keep in memory in slow avg mode
-#define SHORT_PERIOD	5		// # or samples for fast avg mode
-#define SCALE_FACTOR	57		//	CPM to uSv/hr conversion factor (x10,000 to avoid float)
-#define PULSEWIDTH		100		// width of the PULSE output (in microseconds)
+#define LONG_PERIOD		60	// # of samples to keep in memory in slow avg mode
+#define SHORT_PERIOD            5       // # of samples for fast avg mode
+#define SCALE_FACTOR            57      // CPM to uSv/hr conversion factor (x10,000 to avoid float)
+#define PULSEWIDTH              100     // width of the PULSE output (in microseconds)
 
 // Function prototypes
-void uart_putchar(char c);			// send a character to the serial port
-void uart_putstring(char *buffer);		// send a null-terminated string in SRAM to the serial port
+void uart_putchar(char c);		// send a character to the serial port
+void uart_putstring(char *buffer);	// send a null-terminated string in SRAM to the serial port
 void uart_putstring_P(char *buffer);	// send a null-terminated string in PROGMEM to the serial port
 
 void checkevent(void);	// flash LED and beep the piezo
@@ -96,13 +96,13 @@ volatile uint16_t cps;			// GM counts per second, updated once a second
 volatile uint8_t overflow;		// overflow flag
 
 volatile uint8_t buffer[LONG_PERIOD];	// the sample buffer
-volatile uint8_t idx;					// sample buffer index
+volatile uint8_t idx;			// sample buffer index
 
-volatile uint8_t eventflag;	// flag for ISR to tell main loop if a GM event has occurred
-volatile uint8_t tick;		// flag that tells main() when 1 second has passed
+volatile uint8_t eventflag;             // flag for ISR to tell main loop if a GM event has occurred
+volatile uint8_t tick;                  // flag that tells main() when 1 second has passed
 
-char serbuf[SER_BUFF_LEN];	// serial buffer
-uint8_t mode;				// logging mode, 0 = slow, 1 = fast, 2 = inst
+char serbuf[SER_BUFF_LEN];              // serial buffer
+uint8_t mode;                           // logging mode, 0 = slow, 1 = fast, 2 = inst
 
 
 // Interrupt service routines
@@ -328,8 +328,7 @@ int main(void)
 	
 	sei();	// Enable interrupts
 
-	while(1) {	// loop forever
-		
+        while(1) {      // loop forever
 		// Configure AVR for sleep, this saves a couple mA when idle
 		set_sleep_mode(SLEEP_MODE_IDLE);	// CPU will go to sleep but peripherals keep running
 		sleep_enable();		// enable sleep
