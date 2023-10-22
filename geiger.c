@@ -130,12 +130,12 @@ ISR(INT0_vect)
 //	execute multiple times if we're not careful.
 ISR(INT1_vect)
 {
-	_delay_ms(25);					// slow down interrupt calls (crude debounce)
-	
-	if ((PIND & _BV(PD3)) == 0)		// is button still pressed?
-		nobeep ^= 1;				// toggle mute mode
-	
-	EIFR |= _BV(INTF1);				// clear interrupt flag to avoid executing ISR again due to switch bounce
+        _delay_ms(25);                                  // slow down interrupt calls (crude debounce)
+
+        if ((PIND & _BV(PD3)) == 0)                     // is button still pressed?
+                   nobeep ^= 1;                         // toggle mute mode
+
+        EIFR |= _BV(INTF1);                             // clear interrupt flag to avoid executing ISR again due to switch bounce
 }
 
 /*	Timer1 compare interrupt 
@@ -144,31 +144,31 @@ ISR(INT1_vect)
  */
 ISR(TIMER1_COMPA_vect)
 {
-	uint8_t i;	// index for fast mode
-	tick = 1;	// update flag
-	
-	//PORTB ^= _BV(PB4);	// toggle the LED (for debugging purposes)
-	cps = count;
-	slowcpm -= buffer[idx];		// subtract oldest sample in sample buffer
-	
-	if (count > UINT8_MAX) {	// watch out for overflowing the sample buffer
-		count = UINT8_MAX;
-		overflow = 1;
-	}
-			
-	slowcpm += count;			// add current sample
-	buffer[idx] = count;	// save current sample to buffer (replacing old value)
-	
-	// Compute CPM based on the last SHORT_PERIOD samples
-	fastcpm = 0;
-	for(i=0; i<SHORT_PERIOD;i++) {
-		int8_t x = idx - i;
-		if (x < 0)
-			x = LONG_PERIOD + x;
-		fastcpm += buffer[x];	// sum up the last 5 CPS values
-	}
-	fastcpm = fastcpm * (LONG_PERIOD/SHORT_PERIOD);	// convert to CPM
-	
+        uint8_t i;      // index for fast mode
+        tick = 1;       // update flag
+
+        //PORTB ^= _BV(PB4);            // toggle the LED (for debugging purposes)
+        cps = count;
+        slowcpm -= buffer[idx];         // subtract oldest sample in sample buffer
+
+        if (count > UINT8_MAX) {        // watch out for overflowing the sample buffer
+                count = UINT8_MAX;
+                overflow = 1;
+        }
+
+        slowcpm += count;               // add current sample
+        buffer[idx] = count;            // save current sample to buffer (replacing old value)
+
+        // Compute CPM based on the last SHORT_PERIOD samples
+        fastcpm = 0;
+        for(i=0; i<SHORT_PERIOD;i++) {
+                int8_t x = idx - i;
+                if (x < 0)
+                        x = LONG_PERIOD + x;
+                fastcpm += buffer[x];   // sum up the last 5 CPS values
+        }
+        fastcpm = fastcpm * (LONG_PERIOD/SHORT_PERIOD);	// convert to CPM
+
 	// Move to the next entry in the sample buffer
 	idx++;
 	if (idx >= LONG_PERIOD)
@@ -247,18 +247,18 @@ void sendreport(void)
 			mode = 0;
 			cpm = slowcpm;	// report cpm based on last 60 samples
 		}
-		
-		// Send CPM value to the serial port
-		uart_putstring_P(PSTR("CPS, "));
-		utoa(cps, serbuf, 10);		// radix 10
-		uart_putstring(serbuf);
-			
-		uart_putstring_P(PSTR(", CPM, "));
-		ultoa(cpm, serbuf, 10);		// radix 10
-		uart_putstring(serbuf);
-			
-		uart_putstring_P(PSTR(", uSv/hr, "));
-	
+
+                // Send CPM value to the serial port
+                uart_putstring_P(PSTR("CPS, "));
+                utoa(cps, serbuf, 10);          // radix 10
+                uart_putstring(serbuf);
+
+                uart_putstring_P(PSTR(", CPM, "));
+                ultoa(cpm, serbuf, 10);         // radix 10
+                uart_putstring(serbuf);
+
+                uart_putstring_P(PSTR(", uSv/hr, "));
+
 		// calculate uSv/hr based on scaling factor, and multiply result by 100
 		// so we can easily separate the integer and fractional components (2 decimal places)
 		uint32_t usv_scaled = (uint32_t)(cpm*SCALE_FACTOR);	// scale and truncate the integer part
