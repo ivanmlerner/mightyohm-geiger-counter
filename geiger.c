@@ -101,6 +101,9 @@ volatile uint8_t idx;			// sample buffer index
 volatile uint8_t eventflag;             // flag for ISR to tell main loop if a GM event has occurred
 volatile uint8_t tick;                  // flag that tells main() when 1 second has passed
 
+volatile uint32_t media;
+volatile uint16_t seconds;
+
 char serbuf[SER_BUFF_LEN];              // serial buffer
 uint8_t mode;                           // logging mode, 0 = slow, 1 = fast, 2 = inst
 
@@ -135,6 +138,17 @@ ISR(INT1_vect)
         if ((PIND & _BV(PD3)) == 0)                     // is button still pressed?
                    nobeep ^= 1;                         // toggle mute mode
 
+        _delay_ms(975);
+        if ((PIND & _BV(PD3)) == 0)
+        {
+	  nobeep ^= 1;
+	  seconds = 0;
+	  media   = 0;
+	}
+
+	while ((PIND & _BV(PD3)) == 0)
+	  _delay_ms(100);
+
         EIFR |= _BV(INTF1);                             // clear interrupt flag to avoid executing ISR again due to switch bounce
 }
 
@@ -149,6 +163,8 @@ ISR(TIMER1_COMPA_vect)
 
         //PORTB ^= _BV(PB4);            // toggle the LED (for debugging purposes)
         cps = count;
+        media += cps;
+        seconds++;
         slowcpm -= buffer[idx];         // subtract oldest sample in sample buffer
 
         if (count > UINT8_MAX) {        // watch out for overflowing the sample buffer
@@ -249,15 +265,19 @@ void sendreport(void)
 		}
 
                 // Send CPM value to the serial port
-                uart_putstring_P(PSTR("CPS, "));
-                utoa(cps, serbuf, 10);          // radix 10
+                uart_putstring_P(PSTR("CPM("));
+                if (mode == 2) {
+                        uart_putstring_P(PSTR("INST"));
+                } else if (mode == 1) {
+                        uart_putstring_P(PSTR("FAST"));
+                } else {
+                        uart_putstring_P(PSTR("SLOW"));
+                }
+                uart_putstring_P(PSTR("): "));
+                ultoa(cpm, serbuf, 10);		// radix 10
                 uart_putstring(serbuf);
 
-                uart_putstring_P(PSTR(", CPM, "));
-                ultoa(cpm, serbuf, 10);         // radix 10
-                uart_putstring(serbuf);
-
-                uart_putstring_P(PSTR(", uSv/hr, "));
+                uart_putstring_P(PSTR(", uSv/h: "));
 
 		// calculate uSv/hr based on scaling factor, and multiply result by 100
 		// so we can easily separate the integer and fractional components (2 decimal places)
@@ -276,15 +296,26 @@ void sendreport(void)
 		utoa(fraction, serbuf, 10);
 		uart_putstring(serbuf);
 			
-		// Tell us what averaging method is being used
-		if (mode == 2) {
-			uart_putstring_P(PSTR(", INST"));
-		} else if (mode == 1) {
-			uart_putstring_P(PSTR(", FAST"));
-		} else {
-			uart_putstring_P(PSTR(", SLOW"));
-		}			
+		uart_putstring_P(PSTR(", Average: "));
+		ultoa((media*60/seconds), serbuf, 10);
+		uart_putstring(serbuf);
+		uart_putstring_P(PSTR(", uSv/h: "));
+
+		uint32_t usv_avg_scaled = (uint32_t)((media*60/seconds)*SCALE_FACTOR);	// scale and truncate the integer part
 			
+		// this reports the integer part
+		utoa((uint16_t)(usv_avg_scaled/10000), serbuf, 10);	
+		uart_putstring(serbuf);
+			
+		uart_putchar('.');
+			
+		// this reports the fractional part (2 decimal places)
+		uint8_t fraction_avg = (usv_avg_scaled/100)%100;
+		if (fraction_avg < 10)
+			uart_putchar('0');	// zero padding for <0.10
+		utoa(fraction_avg, serbuf, 10);
+		uart_putstring(serbuf);
+		
 		// We're done reporting data, output a newline.
 		uart_putchar('\n');	
 	}	
