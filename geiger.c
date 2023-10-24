@@ -114,8 +114,7 @@ uint8_t mode;                           // logging mode, 0 = slow, 1 = fast, 2 =
   Pin change interrupt for pin INT0
   This interrupt is called on the falling edge of a GM pulse.
 */
-ISR(INT0_vect)
-{
+ISR(INT0_vect) {
   if (count < UINT16_MAX) // check for overflow, if we do overflow just cap the counts at max possible
     count++; // increase event counter
   
@@ -135,8 +134,7 @@ ISR(INT0_vect)
   We need to be careful about switch bounce, which will make the interrupt
   execute multiple times if we're not careful.
 */
-ISR(INT1_vect)
-{
+ISR(INT1_vect) {
   _delay_ms(25);                  // slow down interrupt calls (crude debounce)
   
   if ((PIND & _BV(PD3)) == 0)     // is button still pressed?
@@ -160,8 +158,7 @@ ISR(INT1_vect)
   This interrupt is called every time TCNT1 reaches OCR1A and is reset back to 0 (CTC mode).
   Timer1 is setup so this happens once a second.
 */
-ISR(TIMER1_COMPA_vect)
-{
+ISR(TIMER1_COMPA_vect) {
   uint8_t i;      // index for fast mode
   tick = 1;       // update flag
   
@@ -199,16 +196,14 @@ ISR(TIMER1_COMPA_vect)
 // Functions
 
 // Send a character to the UART
-void uart_putchar(char c)
-{
+void uart_putchar(char c) {
   if (c == '\n') uart_putchar('\r');      // Windows-style CRLF
   loop_until_bit_is_set(UCSRA, UDRE);     // wait until UART is ready to accept a new character
   UDR = c;                                // send 1 character
 }
 
 // Send a string in SRAM to the UART
-void uart_putstring(char *buffer)       
-{       
+void uart_putstring(char *buffer) {
   // start sending characters over the serial port until we reach the end of the string
   while (*buffer != '\0') {       // are we at the end of the string yet?
     uart_putchar(*buffer);  // send the contents
@@ -217,16 +212,14 @@ void uart_putstring(char *buffer)
 }
 
 // Send a string in PROGMEM to the UART
-void uart_putstring_P(char *buffer)     
-{       
+void uart_putstring_P(char *buffer) {
   // start sending characters over the serial port until we reach the end of the string
   while (pgm_read_byte(buffer) != '\0')   // are we done yet?
     uart_putchar(pgm_read_byte(buffer++));  // read byte from PROGMEM and send it
 }
 
 // flash LED and beep the piezo
-void checkevent(void)
-{
+void checkevent(void) {
   if (eventflag) {                // a GM event has occurred, do something about it!
     eventflag = 0;          // reset flag as soon as possible, in case another ISR is called while we're busy
     
@@ -248,8 +241,7 @@ void checkevent(void)
 }
 
 // log data over the serial port
-void sendreport(void)
-{
+void sendreport(void) {
   uint32_t cpm;   // This is the CPM value we will report
   if(tick) {      // 1 second has passed, time to report data via UART
     tick = 0;       // reset flag for the next interval
@@ -325,8 +317,7 @@ void sendreport(void)
 }
 
 // Start of main program
-int main(void)
-{       
+int main(void) {
   // Configure the UART   
   // Set baud rate generator based on F_CPU
   UBRRH = (unsigned char)(F_CPU/(16UL*BAUD)-1)>>8;
@@ -373,7 +364,6 @@ int main(void)
     checkevent();                     // check if we should signal an event (led + beep)
     sendreport();                     // send a log report over serial
     checkevent();                     // check again before going to sleep
-
-  }       
+  }
   return 0;       // never reached
 }
