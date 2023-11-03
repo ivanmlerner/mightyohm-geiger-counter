@@ -134,18 +134,11 @@ ISR(INT0_vect) {
 */
 ISR(INT1_vect) {
   _delay_ms(25);                 // slow down interrupt calls (crude debounce)
-  if ((PIND & _BV(PD3)) == 0)    // is button still pressed?
+  if ((PIND & _BV(PD3)) == 0) {  // is button still pressed?
     nobeep ^= 1;                 // toggle mute mode
-  
-  _delay_ms(975);
-  if ((PIND & _BV(PD3)) == 0) {
-    nobeep ^= 1;
     seconds = 0;
     sum_avg   = 0;
   }
-  
-  while ((PIND & _BV(PD3)) == 0)
-    _delay_ms(100);
   
   EIFR |= _BV(INTF1);            // clear interrupt flag to avoid executing ISR again due to switch bounce
 }
