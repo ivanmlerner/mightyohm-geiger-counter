@@ -137,7 +137,7 @@ ISR(INT1_vect) {
   if ((PIND & _BV(PD3)) == 0) {  // is button still pressed?
     nobeep ^= 1;                 // toggle mute mode
     seconds = 0;
-    sum_avg   = 0;
+    sum_avg = 0;
   }
   
   EIFR |= _BV(INTF1);            // clear interrupt flag to avoid executing ISR again due to switch bounce
