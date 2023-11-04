@@ -75,7 +75,7 @@
 #define THRESHOLD               1000    // CPM threshold for fast avg mode
 #define LONG_PERIOD             60      // # of samples to keep in memory in slow avg mode
 #define SHORT_PERIOD            5       // # of samples for fast avg mode
-#define SCALE_FACTOR            57      // CPM to uSv/hr conversion factor (x10,000 to avoid float)
+#define SCALE_FACTOR            65      // CPM to uSv/hr conversion factor (x10,000 to avoid float)
 #define PULSEWIDTH              100     // width of the PULSE output (in microseconds)
 
 // Function prototypes
